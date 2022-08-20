@@ -1,7 +1,8 @@
 #![feature(slice_group_by)]
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{env, error::Error, fs::File};
+use std::io::{self};
 
 #[derive(Debug, Deserialize, Clone)]
 struct Transaction {
@@ -12,7 +13,7 @@ struct Transaction {
     amount: Option<f32>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 struct Account {
     client: u16,
     available: f32,
@@ -51,12 +52,19 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .collect::<Vec<Vec<Transaction>>>();
 
 
-    let account = Account::new(1);
+    let accounts = vec![Account::new(1), Account::new(2)];
+
+    let mut writer = csv::Writer::from_writer(io::stdout());
+    for account in accounts.iter() {
+        writer.serialize(account)?;
+    }
     
     // dbg!(&file);
     // dbg!(&csv_data);
     // dbg!(&transactions);
     // dbg!(&transactions_group_by_client);
-    dbg!(&account);
+    // dbg!(accounts);
+    writer.flush()?;
+
     Ok(())
 }
