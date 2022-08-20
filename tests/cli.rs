@@ -50,6 +50,11 @@ const RESOLVE_CHARGEBACK: Test = Test {
     out: "tests/expected/out_chargeback.csv",
 };
 
+const RESOLVE_NOT_DISPUTED_CHARGEBACK: Test = Test {
+    input: "tests/inputs/in_chargeback_not_disputed.csv",
+    out: "tests/expected/out_chargeback_not_disputed.csv",
+};
+
 
 
 fn run(test: &Test) -> TestResult {
@@ -108,4 +113,9 @@ fn should_not_resolve_funds_when_dispute_does_not_exist() -> TestResult {
 #[test]
 fn should_withdraw_and_freeze_account_on_chargeback() -> TestResult {
     run(&RESOLVE_CHARGEBACK)
+}
+
+#[test]
+fn should_not_withdraw_funds_when_dispute_does_not_exist() -> TestResult {
+    run(&RESOLVE_NOT_DISPUTED_CHARGEBACK)
 }
