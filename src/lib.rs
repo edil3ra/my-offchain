@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::io::{self};
 use std::{env, error::Error, fmt, fs::File};
+use std::collections::{HashSet, HashMap};
 
 type MyResult<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -112,6 +113,14 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
         .iter()
         .filter(|transaction| matches!(transaction.transaction_type, TransactionTypes::Deposit));
 
+    let deposits_map = transactions
+        .iter()
+        .filter(|transaction| matches!(transaction.transaction_type, TransactionTypes::Deposit))
+        .map(|transaction| (transaction.tx, transaction))
+        .collect::<HashMap<u32, &Transaction>>();
+
+    let mut disputes_map: HashMap<u32, &Transaction> = HashMap::new();
+
     for transaction in transactions.iter() {
         match transaction.transaction_type {
             TransactionTypes::Deposit => {
@@ -123,12 +132,10 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
                 }
             }
             TransactionTypes::Dispute => {
-                let transaction = deposits
-                    .clone()
-                    .find(|deposit| deposit.tx == transaction.tx);
-                if let Some(element) = transaction {
-                    account.available -= element.amount.unwrap();
-                    account.held += element.amount.unwrap();
+                if let Some(deposit_transaction) = deposits_map.get(&transaction.tx) {
+                    account.available -= deposit_transaction.amount.unwrap();
+                    account.held += deposit_transaction.amount.unwrap();
+                    disputes_map.insert(transaction.tx, transaction);
                 }
             }
             TransactionTypes::Resolve => {
