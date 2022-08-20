@@ -72,7 +72,6 @@ impl Account {
     }
 }
 
-
 pub fn run() -> MyResult<()> {
     let filename = env::args().nth(1).ok_or("missing filename")?;
     let file = File::open(&filename).map_err(|e| e.to_string())?;
@@ -88,13 +87,12 @@ pub fn run() -> MyResult<()> {
         .map(|group| group.to_vec())
         .collect::<Vec<Vec<Transaction>>>();
 
-    let accounts = transactions_group_by_client 
+    let accounts = transactions_group_by_client
         .iter()
         .map(|transactions| {
             create_account_from_transactions(transactions).map(|account| account.to_serialize())
         })
         .collect::<Result<Vec<AccountSerialized>, Box<dyn Error>>>()?;
-
 
     let mut writer = csv::Writer::from_writer(io::stdout());
     write_to_stdout(&accounts, &mut writer)?;
@@ -110,6 +108,10 @@ pub fn run() -> MyResult<()> {
 
 fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Account> {
     let mut account = Account::new(transactions[0].client); // ok to panic here as there is always at least one transaction
+    let deposits = transactions
+        .iter()
+        .filter(|transaction| matches!(transaction.transaction_type, TransactionTypes::Deposit));
+
     for transaction in transactions.iter() {
         match transaction.transaction_type {
             TransactionTypes::Deposit => {
@@ -121,15 +123,23 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
                 }
             }
             TransactionTypes::Dispute => {
-                let element = transactions
-                    .iter()
-                    .find(|transaction_looped| transaction_looped.tx == transaction.tx)
-                    .unwrap();
-
-                account.available -= element.amount.unwrap();
-                account.held += element.amount.unwrap();
+                let transaction = deposits
+                    .clone()
+                    .find(|deposit| deposit.tx == transaction.tx);
+                if let Some(element) = transaction {
+                    account.available -= element.amount.unwrap();
+                    account.held += element.amount.unwrap();
+                }
             }
-            TransactionTypes::Resolve => todo!(),
+            TransactionTypes::Resolve => {
+                let transaction = deposits
+                    .clone()
+                    .find(|deposit| deposit.tx == transaction.tx);
+                if let Some(element) = transaction {
+                    account.available += element.amount.unwrap();
+                    account.held -= element.amount.unwrap();
+                }
+            }
             TransactionTypes::Chargeback => todo!(),
         }
     }
