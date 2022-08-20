@@ -2,7 +2,9 @@
 
 use serde::{Deserialize, Serialize};
 use std::io::{self};
-use std::{env, error::Error, fs::File};
+use std::{env, error::Error, fmt, fs::File};
+
+type MyResult<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Debug, Deserialize, Clone)]
 enum TransactionTypes {
@@ -49,7 +51,7 @@ impl Account {
     }
 
     /// could not find a way to deserialize total
-    fn to_deserialize(&self) -> AccountSerialized {
+    fn to_serialize(&self) -> AccountSerialized {
         AccountSerialized {
             client: self.client,
             available: self.available,
@@ -60,11 +62,12 @@ impl Account {
     }
 
     fn total(&self) -> f32 {
-        dbg!(self.available + self.held)
+        self.available + self.held
     }
 }
 
-pub fn run() -> Result<(), Box<dyn Error>> {
+
+pub fn run() -> MyResult<()> {
     let filename = env::args().nth(1).ok_or("missing filename")?;
     let file = File::open(&filename).map_err(|e| e.to_string())?;
     let mut csv_data = csv::Reader::from_reader(&file);
@@ -79,10 +82,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .map(|group| group.to_vec())
         .collect::<Vec<Vec<Transaction>>>();
 
-    let accounts = transactions_group_by_client
+    let accounts = transactions_group_by_client 
         .iter()
-        .map(|transactions| create_account_from_transactions(transactions).to_deserialize())
-        .collect::<Vec<AccountSerialized>>();
+        .map(|transactions| {
+            create_account_from_transactions(transactions).map(|account| account.to_serialize())
+        })
+        .collect::<Result<Vec<AccountSerialized>, Box<dyn Error>>>()?;
+
 
     let mut writer = csv::Writer::from_writer(io::stdout());
     write_to_stdout(&accounts, &mut writer)?;
@@ -96,7 +102,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn create_account_from_transactions(transactions: &[Transaction]) -> Account {
+fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Account> {
     let mut account = Account::new(transactions[0].client); // ok to panic here as there is always at least one transaction
     for transaction in transactions.iter() {
         match transaction.transaction_type {
@@ -104,11 +110,13 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> Account {
                 account.available += transaction.amount.unwrap();
             }
             TransactionTypes::Withdrawal => {
-                account.available -= transaction.amount.unwrap();
+                if (account.available - transaction.amount.unwrap()) > 0.0 {
+                    account.available -= transaction.amount.unwrap()
+                }
             }
         }
     }
-    account
+    Ok(account)
 }
 
 fn write_to_stdout<T: Serialize>(
