@@ -5,9 +5,17 @@ use std::io::{self};
 use std::{env, error::Error, fs::File};
 
 #[derive(Debug, Deserialize, Clone)]
+enum TransactionTypes {
+    #[serde(rename = "deposit")]
+    Deposit,
+    #[serde(rename = "withdrawal")]
+    Withdrawal,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 struct Transaction {
     #[serde(rename = "type")]
-    transaction_type: String,
+    transaction_type: TransactionTypes,
     client: u16,
     tx: u32,
     amount: Option<f32>,
@@ -32,6 +40,10 @@ impl Account {
             locked: false,
         }
     }
+
+    fn total(&self) -> f32 {
+        self.available + self.held
+    }
 }
 
 pub fn run() -> Result<(), Box<dyn Error>> {
@@ -49,7 +61,10 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .map(|group| group.to_vec())
         .collect::<Vec<Vec<Transaction>>>();
 
-    let accounts = vec![Account::new(1), Account::new(2)];
+    let accounts = vec![
+        create_account_from_transactions(&transactions_group_by_client[0]),
+        create_account_from_transactions(&transactions_group_by_client[1]),
+    ];
     let mut writer = csv::Writer::from_writer(io::stdout());
     write_to_stdout(&accounts, &mut writer)?;
 
@@ -57,9 +72,24 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     // dbg!(&csv_data);
     // dbg!(&transactions);
     // dbg!(&transactions_group_by_client);
-    // dbg!(accounts);
+    dbg!(accounts);
 
     Ok(())
+}
+
+fn create_account_from_transactions(transactions: &[Transaction]) -> Account {
+    let mut account = Account::new(transactions[0].client); // ok to panic here as there is always at least one item
+    for transaction in transactions.iter() {
+        match transaction.transaction_type {
+            TransactionTypes::Deposit => {
+                account.available += transaction.amount.unwrap();
+            }
+            TransactionTypes::Withdrawal => {
+                account.available -= transaction.amount.unwrap();
+            }
+        }
+    }
+    account
 }
 
 fn write_to_stdout<T: Serialize>(
