@@ -135,16 +135,13 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
                 if let Some(deposit_transaction) = deposits_map.get(&transaction.tx) {
                     account.available -= deposit_transaction.amount.unwrap();
                     account.held += deposit_transaction.amount.unwrap();
-                    disputes_map.insert(transaction.tx, transaction);
+                    disputes_map.insert(deposit_transaction.tx, deposit_transaction);
                 }
             }
             TransactionTypes::Resolve => {
-                let transaction = deposits
-                    .clone()
-                    .find(|deposit| deposit.tx == transaction.tx);
-                if let Some(element) = transaction {
-                    account.available += element.amount.unwrap();
-                    account.held -= element.amount.unwrap();
+                if let Some((_, dispute_transaction)) = disputes_map.remove_entry(&transaction.tx) {
+                    account.available += dispute_transaction.amount.unwrap();
+                    account.held -= dispute_transaction.amount.unwrap();
                 }
             }
             TransactionTypes::Chargeback => todo!(),
