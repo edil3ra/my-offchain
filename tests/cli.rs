@@ -1,5 +1,4 @@
 use assert_cmd::Command;
-use predicates::prelude::*;
 use std::fs;
 
 const PRG: &str = "my-offchain";
@@ -9,10 +8,6 @@ type TestResult = Result<(), Box<dyn std::error::Error>>;
 struct Test {
     input: &'static str,
     out: &'static str,
-}
-
-struct TestFailure {
-    input: &'static str,
 }
 
 const WITHDRAWAL_SUCESS: Test = Test {
@@ -58,7 +53,6 @@ const RESOLVE_NOT_DISPUTED_CHARGEBACK: Test = Test {
 
 
 fn run(test: &Test) -> TestResult {
-    let input = fs::read_to_string(test.input)?;
     let expected = fs::read_to_string(test.out)?;
 
     Command::cargo_bin(PRG)?
@@ -69,24 +63,13 @@ fn run(test: &Test) -> TestResult {
     Ok(())
 }
 
-fn run_fail(test: &TestFailure, message: &str) -> TestResult {
-    let input = fs::read_to_string(test.input)?;
-
-    Command::cargo_bin(PRG)?
-        .arg(test.input)
-        .assert()
-        .success()
-        .stderr(predicate::str::contains(message));
-    Ok(())
-}
-
 #[test]
-fn should_withdrawal_when_funds_are_available() -> TestResult {
+fn should_withdraw_when_funds_are_available() -> TestResult {
     run(&WITHDRAWAL_SUCESS)
 }
 
 #[test]
-fn should_not_withdrawal_when_funds_is_not_available() -> TestResult {
+fn should_not_withdraw_when_funds_is_not_available() -> TestResult {
     run(&WITHDRAWAL_IGNORED)
 }
 
