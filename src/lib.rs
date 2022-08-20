@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::io::{self};
 use std::{env, error::Error, fs::File};
 use std::collections::{HashMap};
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
+
 
 type MyResult<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -27,23 +30,27 @@ struct Transaction {
     transaction_type: TransactionTypes,
     client: u16,
     tx: u32,
-    amount: Option<f32>,
+    #[serde(with = "rust_decimal::serde::float_option")]
+    amount: Option<Decimal>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct AccountSerialized {
     client: u16,
-    available: f32,
-    held: f32,
-    total: f32,
+    #[serde(with = "rust_decimal::serde::float")]
+    available: Decimal,
+    #[serde(with = "rust_decimal::serde::float")]
+    held: Decimal,
+    #[serde(with = "rust_decimal::serde::float")]
+    total: Decimal,
     locked: bool,
 }
 
 #[derive(Debug, Clone)]
 struct Account {
     client: u16,
-    available: f32,
-    held: f32,
+    available: Decimal,
+    held: Decimal,
     locked: bool,
 }
 
@@ -51,8 +58,8 @@ impl Account {
     fn new(client: u16) -> Self {
         Account {
             client,
-            available: 0.0,
-            held: 0.0,
+            available: dec!(0),
+            held: dec!(0),
             locked: false,
         }
     }
@@ -61,14 +68,14 @@ impl Account {
     fn to_serialize(&self) -> AccountSerialized {
         AccountSerialized {
             client: self.client,
-            available: self.available,
-            held: self.held,
-            total: self.total(),
+            available: self.available.round_dp(4),
+            held: self.held.round_dp(4),
+            total: self.total().round_dp(4),
             locked: self.locked,
         }
     }
 
-    fn total(&self) -> f32 {
+    fn total(&self) -> Decimal {
         self.available + self.held
     }
 }
@@ -117,7 +124,7 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
                 account.available += transaction.amount.unwrap();
             }
             TransactionTypes::Withdrawal => {
-                if (account.available - transaction.amount.unwrap()) > 0.0 {
+                if (account.available - transaction.amount.unwrap()) > dec!(0) {
                     account.available -= transaction.amount.unwrap()
                 }
             }
