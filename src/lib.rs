@@ -81,7 +81,7 @@ impl Account {
 }
 
 pub fn run() -> MyResult<()> {
-    let filename = env::args().nth(1).ok_or("missing filename")?;
+    let filename = env::args().nth(1).ok_or("Missing filename arg")?;
     let file = File::open(&filename).map_err(|e| e.to_string())?;
     let mut csv_data = csv::Reader::from_reader(&file);
     let mut transactions = csv_data
