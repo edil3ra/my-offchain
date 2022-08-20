@@ -25,6 +25,12 @@ const WITHDRAWAL_IGNORED: Test = Test {
     out: "tests/expected/out_withdrawal_ignored.csv",
 };
 
+const DISPUTE_EXISTING_FUND: Test = Test {
+    input: "tests/inputs/in_dispute_existing.csv",
+    out: "tests/expected/out_dispute_existing.csv",
+};
+
+
 fn run(test: &Test) -> TestResult {
     let input = fs::read_to_string(test.input)?;
     let expected = fs::read_to_string(test.out)?;
@@ -56,4 +62,9 @@ fn should_withdrawal_when_funds_are_available() -> TestResult {
 #[test]
 fn should_not_withdrawal_when_funds_is_not_available() -> TestResult {
     run(&WITHDRAWAL_IGNORED)
+}
+
+#[test]
+fn should_held_funds_when_dispute_on_existing_tx() -> TestResult {
+    run(&DISPUTE_EXISTING_FUND)
 }
