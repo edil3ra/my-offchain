@@ -12,6 +12,12 @@ enum TransactionTypes {
     Deposit,
     #[serde(rename = "withdrawal")]
     Withdrawal,
+    #[serde(rename = "dispute")]
+    Dispute,
+    #[serde(rename = "resolve")]
+    Resolve,
+    #[serde(rename = "chargeback")]
+    Chargeback,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -114,6 +120,9 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
                     account.available -= transaction.amount.unwrap()
                 }
             }
+            TransactionTypes::Dispute => todo!(),
+            TransactionTypes::Resolve => todo!(),
+            TransactionTypes::Chargeback => todo!(),
         }
     }
     Ok(account)
