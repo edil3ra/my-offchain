@@ -109,9 +109,6 @@ pub fn run() -> MyResult<()> {
 
 fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Account> {
     let mut account = Account::new(transactions[0].client); // ok to panic here as there is always at least one transaction
-    let deposits = transactions
-        .iter()
-        .filter(|transaction| matches!(transaction.transaction_type, TransactionTypes::Deposit));
 
     let deposits_map = transactions
         .iter()
