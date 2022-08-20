@@ -120,7 +120,15 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
                     account.available -= transaction.amount.unwrap()
                 }
             }
-            TransactionTypes::Dispute => todo!(),
+            TransactionTypes::Dispute => {
+                let element = transactions
+                    .iter()
+                    .find(|transaction_looped| transaction_looped.tx == transaction.tx)
+                    .unwrap();
+
+                account.available -= element.amount.unwrap();
+                account.held += element.amount.unwrap();
+            }
             TransactionTypes::Resolve => todo!(),
             TransactionTypes::Chargeback => todo!(),
         }
