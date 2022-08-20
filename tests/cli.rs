@@ -55,6 +55,11 @@ const DEPOSIT_MULTIPLE_CLIENT: Test = Test {
     out: "tests/expected/out_deposit_with_multiple_clients.csv",
 };
 
+const DISPLAY_DECMIAL: Test = Test {
+    input: "tests/inputs/in_deposit_display_correct_decimal.csv",
+    out: "tests/expected/out_deposit_display_correct_decimal.csv",
+};
+
 
 
 fn run(test: &Test) -> TestResult {
@@ -111,4 +116,9 @@ fn should_not_withdraw_funds_when_dispute_does_not_exist() -> TestResult {
 #[test]
 fn should_work_with_mutiple_clients() -> TestResult {
     run(&DEPOSIT_MULTIPLE_CLIENT)
+}
+
+#[test]
+fn should_display_decimal_correctly() -> TestResult {
+    run(&DISPLAY_DECMIAL)
 }
