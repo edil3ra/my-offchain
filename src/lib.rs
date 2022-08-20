@@ -12,6 +12,27 @@ struct Transaction {
     amount: Option<f32>,
 }
 
+#[derive(Debug, Clone)]
+struct Account {
+    client: u16,
+    available: f32,
+    held: f32,
+    total: f32,
+    locked: bool,
+}
+
+impl Account {
+    fn new(client: u16) -> Self {
+        Account {
+            client,
+            available: 0.0,
+            held: 0.0,
+            total: 0.0,
+            locked: false,
+        }
+    }
+}
+
 
 pub fn run() -> Result<(), Box<dyn Error>> {
     let filename = env::args().nth(1).ok_or("missing filename")?;
@@ -30,9 +51,12 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .collect::<Vec<Vec<Transaction>>>();
 
 
-    dbg!(&file);
-    dbg!(&csv_data);
-    dbg!(&transactions);
-    dbg!(&transactions_group_by_client);
+    let account = Account::new(1);
+    
+    // dbg!(&file);
+    // dbg!(&csv_data);
+    // dbg!(&transactions);
+    // dbg!(&transactions_group_by_client);
+    dbg!(&account);
     Ok(())
 }
