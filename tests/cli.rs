@@ -30,6 +30,10 @@ const DISPUTE_EXISTING_FUND: Test = Test {
     out: "tests/expected/out_dispute_existing.csv",
 };
 
+const DISPUTE_NON_EXISTING_FUND: Test = Test {
+    input: "tests/inputs/in_dispute_existing.csv",
+    out: "tests/expected/out_dispute_existing.csv",
+};
 
 fn run(test: &Test) -> TestResult {
     let input = fs::read_to_string(test.input)?;
@@ -66,5 +70,10 @@ fn should_not_withdrawal_when_funds_is_not_available() -> TestResult {
 
 #[test]
 fn should_held_funds_when_dispute_on_existing_tx() -> TestResult {
+    run(&DISPUTE_EXISTING_FUND)
+}
+
+#[test]
+fn should_ignore_funds_when_dispute_an_non_existing_tx() -> TestResult {
     run(&DISPUTE_EXISTING_FUND)
 }
