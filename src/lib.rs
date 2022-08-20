@@ -1,8 +1,8 @@
 #![feature(slice_group_by)]
 
 use serde::{Deserialize, Serialize};
-use std::{env, error::Error, fs::File};
 use std::io::{self};
+use std::{env, error::Error, fs::File};
 
 #[derive(Debug, Deserialize, Clone)]
 struct Transaction {
@@ -34,7 +34,6 @@ impl Account {
     }
 }
 
-
 pub fn run() -> Result<(), Box<dyn Error>> {
     let filename = env::args().nth(1).ok_or("missing filename")?;
     let file = File::open(&filename).map_err(|e| e.to_string())?;
@@ -44,27 +43,32 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .into_iter()
         .collect::<Result<Vec<Transaction>, csv::Error>>()?;
 
-
     transactions.sort_by_key(|transaction| transaction.client);
     let transactions_group_by_client = transactions
         .group_by(|a, b| a.client == b.client)
         .map(|group| group.to_vec())
         .collect::<Vec<Vec<Transaction>>>();
 
-
     let accounts = vec![Account::new(1), Account::new(2)];
-
     let mut writer = csv::Writer::from_writer(io::stdout());
-    for account in accounts.iter() {
-        writer.serialize(account)?;
-    }
-    
+    write_to_stdout(&accounts, &mut writer)?;
+
     // dbg!(&file);
     // dbg!(&csv_data);
     // dbg!(&transactions);
     // dbg!(&transactions_group_by_client);
     // dbg!(accounts);
-    writer.flush()?;
 
+    Ok(())
+}
+
+fn write_to_stdout<T: Serialize>(
+    items: &[T],
+    writer: &mut csv::Writer<io::Stdout>,
+) -> Result<(), csv::Error> {
+    for item in items {
+        writer.serialize(item)?;
+    }
+    writer.flush()?;
     Ok(())
 }
