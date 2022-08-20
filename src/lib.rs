@@ -141,7 +141,12 @@ fn create_account_from_transactions(transactions: &[Transaction]) -> MyResult<Ac
                     account.held -= dispute_transaction.amount.unwrap();
                 }
             }
-            TransactionTypes::Chargeback => todo!(),
+            TransactionTypes::Chargeback => {
+                if let Some((_, dispute_transaction)) = disputes_map.remove_entry(&transaction.tx) {
+                    account.held -= dispute_transaction.amount.unwrap();
+                    account.locked = true;
+                }
+            }
         }
     }
     Ok(account)
