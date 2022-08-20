@@ -40,6 +40,12 @@ const RESOLVE_FUND: Test = Test {
     out: "tests/expected/out_resolve.csv",
 };
 
+const RESOLVE_NOT_DISPUTED_FUND: Test = Test {
+    input: "tests/inputs/in_resolve_not_disputed.csv",
+    out: "tests/expected/out_resolve_not_disputed.csv",
+};
+
+
 fn run(test: &Test) -> TestResult {
     let input = fs::read_to_string(test.input)?;
     let expected = fs::read_to_string(test.out)?;
@@ -74,16 +80,22 @@ fn should_not_withdrawal_when_funds_is_not_available() -> TestResult {
 }
 
 #[test]
-fn should_held_funds_when_dispute_on_existing_tx() -> TestResult {
+fn should_held_funds_when_dispute_has_an_existing_deposit() -> TestResult {
     run(&DISPUTE_EXISTING_FUND)
 }
 
 #[test]
-fn should_ignore_funds_when_dispute_an_non_existing_tx() -> TestResult {
+fn should_not_held_funds_when_dispute_missing_a_deposit() -> TestResult {
     run(&DISPUTE_NON_EXISTING_FUND)
 }
 
 #[test]
-fn should_resolve_fund_when_corresponding_tx_exist() -> TestResult {
+fn should_resolve_funds_when_dispute_exist() -> TestResult {
     run(&RESOLVE_FUND)
+}
+
+
+#[test]
+fn should_not_resolve_funds_when_dispute_does_not_exist() -> TestResult {
+    run(&RESOLVE_NOT_DISPUTED_FUND)
 }
