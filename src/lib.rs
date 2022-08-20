@@ -2,8 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::io::{self};
-use std::{env, error::Error, fmt, fs::File};
-use std::collections::{HashSet, HashMap};
+use std::{env, error::Error, fs::File};
+use std::collections::{HashMap};
 
 type MyResult<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -97,13 +97,6 @@ pub fn run() -> MyResult<()> {
 
     let mut writer = csv::Writer::from_writer(io::stdout());
     write_to_stdout(&accounts, &mut writer)?;
-
-    // dbg!(&file);
-    // dbg!(&csv_data);
-    // dbg!(&transactions);
-    // dbg!(&transactions_group_by_client);
-    // dbg!(accounts);
-
     Ok(())
 }
 
