@@ -50,6 +50,11 @@ const RESOLVE_NOT_DISPUTED_CHARGEBACK: Test = Test {
     out: "tests/expected/out_chargeback_not_disputed.csv",
 };
 
+const DEPOSIT_MULTIPLE_CLIENT: Test = Test {
+    input: "tests/inputs/in_deposit_with_multiple_clients.csv",
+    out: "tests/expected/out_deposit_with_multiple_clients.csv",
+};
+
 
 
 fn run(test: &Test) -> TestResult {
@@ -101,4 +106,9 @@ fn should_withdraw_and_freeze_account_on_chargeback() -> TestResult {
 #[test]
 fn should_not_withdraw_funds_when_dispute_does_not_exist() -> TestResult {
     run(&RESOLVE_NOT_DISPUTED_CHARGEBACK)
+}
+
+#[test]
+fn should_work_with_mutiple_clients() -> TestResult {
+    run(&DEPOSIT_MULTIPLE_CLIENT)
 }
