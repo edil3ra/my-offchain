@@ -31,8 +31,13 @@ const DISPUTE_EXISTING_FUND: Test = Test {
 };
 
 const DISPUTE_NON_EXISTING_FUND: Test = Test {
-    input: "tests/inputs/in_dispute_existing.csv",
-    out: "tests/expected/out_dispute_existing.csv",
+    input: "tests/inputs/in_dispute_non_existing.csv",
+    out: "tests/expected/out_dispute_non_existing.csv",
+};
+
+const RESOLVE_FUND: Test = Test {
+    input: "tests/inputs/in_resolve.csv",
+    out: "tests/expected/out_resolve.csv",
 };
 
 fn run(test: &Test) -> TestResult {
@@ -75,5 +80,10 @@ fn should_held_funds_when_dispute_on_existing_tx() -> TestResult {
 
 #[test]
 fn should_ignore_funds_when_dispute_an_non_existing_tx() -> TestResult {
-    run(&DISPUTE_EXISTING_FUND)
+    run(&DISPUTE_NON_EXISTING_FUND)
+}
+
+#[test]
+fn should_resolve_fund_when_corresponding_tx_exist() -> TestResult {
+    run(&RESOLVE_FUND)
 }
