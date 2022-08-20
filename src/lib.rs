@@ -21,12 +21,20 @@ struct Transaction {
     amount: Option<f32>,
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct Account {
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct AccountSerialized {
     client: u16,
     available: f32,
     held: f32,
     total: f32,
+    locked: bool,
+}
+
+#[derive(Debug, Clone)]
+struct Account {
+    client: u16,
+    available: f32,
+    held: f32,
     locked: bool,
 }
 
@@ -36,13 +44,23 @@ impl Account {
             client,
             available: 0.0,
             held: 0.0,
-            total: 0.0,
             locked: false,
         }
     }
 
+    /// could not find a way to deserialize total
+    fn to_deserialize(&self) -> AccountSerialized {
+        AccountSerialized {
+            client: self.client,
+            available: self.available,
+            held: self.held,
+            total: self.total(),
+            locked: self.locked,
+        }
+    }
+
     fn total(&self) -> f32 {
-        self.available + self.held
+        dbg!(self.available + self.held)
     }
 }
 
@@ -61,10 +79,11 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .map(|group| group.to_vec())
         .collect::<Vec<Vec<Transaction>>>();
 
-    let accounts = vec![
-        create_account_from_transactions(&transactions_group_by_client[0]),
-        create_account_from_transactions(&transactions_group_by_client[1]),
-    ];
+    let accounts = transactions_group_by_client
+        .iter()
+        .map(|transactions| create_account_from_transactions(transactions).to_deserialize())
+        .collect::<Vec<AccountSerialized>>();
+
     let mut writer = csv::Writer::from_writer(io::stdout());
     write_to_stdout(&accounts, &mut writer)?;
 
@@ -72,13 +91,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     // dbg!(&csv_data);
     // dbg!(&transactions);
     // dbg!(&transactions_group_by_client);
-    dbg!(accounts);
+    // dbg!(accounts);
 
     Ok(())
 }
 
 fn create_account_from_transactions(transactions: &[Transaction]) -> Account {
-    let mut account = Account::new(transactions[0].client); // ok to panic here as there is always at least one item
+    let mut account = Account::new(transactions[0].client); // ok to panic here as there is always at least one transaction
     for transaction in transactions.iter() {
         match transaction.transaction_type {
             TransactionTypes::Deposit => {
